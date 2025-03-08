@@ -1,6 +1,6 @@
 require("dotenv").config();
 const cluster = require("cluster");
-const { initializeLoadBalancer } = require("../loadBalancer");
+const { initializeLoadBalancer, processNewWorker} = require("../loadBalancer");
 
 // Defines the number of worker processes to create
 const WORKER_COUNT = process.env.WORKER_COUNT || 4;
@@ -17,18 +17,33 @@ function startCluster() {
 		// Create the specified number of worker processes
 		for (let i = 0; i < WORKER_COUNT; i++) {
 			const worker = cluster.fork();
-			workerIds.push(worker.id);
+			workerIds.push(worker.process.pid); // Store worker process ID
 		}
 
-		// Initialize load balancer with worker IDs
-		initializeLoadBalancer(workerIds);
+		// Initialize the load balancer with worker IDs to track job distribution
+		const workerStatus = initializeLoadBalancer(workerIds);
+		// Uncomment to monitor the task distribution among workers
+		// console.table(workerStatus);
 
-		// If a worker crashes, create a new one to replace it
+		// Handle worker crashes and automatically replace them
 		cluster.on("exit", (worker) => {
-			console.log(`Worker ${worker.process.pid} has stopped, starting a new worker...`);
+			console.log(`Worker ${worker.process.pid} has stopped. Launching a new worker...`);
+			
+			// Start a new worker to replace the one that stopped
 			const newWorker = cluster.fork();
-			workerIds.push(newWorker.id);
-			initializeLoadBalancer(workerIds);
+			workerIds.push(newWorker.process.pid); // Add the new worker's ID to the list
+
+			// Remove the old worker's ID from the list
+			const index = workerIds.indexOf(worker.process.pid);
+			if (index !== -1) {
+				workerIds.splice(index, 1);
+			}
+
+			// Update the load balancer: remove the old worker and initialize the new one with zero jobs
+			const updatedWorkerLoadStatus = processNewWorker(newWorker.process.pid, worker.process.pid);
+
+			// Uncomment to monitor worker loads after replacement
+			// console.table(updatedWorkerLoadStatus);
 		});
 	}
 }
