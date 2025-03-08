@@ -1,0 +1,25 @@
+{
+  "name": "backend-interview-task",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MrSharma050522/Backend-Interview-Task.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MrSharma050522/Backend-Interview-Task/issues"
+  },
+  "homepage": "https://github.com/MrSharma050522/Backend-Interview-Task#readme",
+  "dependencies": {
+    "bullmq": "^5.41.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^5.6.0"
+  }
+}
